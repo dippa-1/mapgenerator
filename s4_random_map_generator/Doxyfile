@@ -1,0 +1,10 @@
+PROJECT_NAME          = "_template_c++"
+RECURSIVE             = YES
+SOURCE_BROWSER        = YES
+OUTPUT_DIRECTORY      = doc
+GENERATE_LATEX        = NO
+EXCLUDE_PATTERNS      = */tests/*
+HAVE_DOT              = NO
+CALL_GRAPH            = YES
+CALLER_GRAPH          = YES
+UML_LOOK              = YES
