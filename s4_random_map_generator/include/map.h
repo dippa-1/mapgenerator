@@ -5,15 +5,15 @@
  * @brief Brief description of the file
 */
 
+#ifndef INCLUDE_MAP_H_
+#define INCLUDE_MAP_H_
+
 #include <iostream>
 #include <cmath>
 #include <iomanip>
 #include <cstdlib>
 #include <ctime>
 #include <vector>
-
-#ifndef INCLUDE_MAP_H_
-#define INCLUDE_MAP_H_
 
 class player;
 class mountain;
@@ -22,9 +22,12 @@ class map {
 private:
   int size;
   int playercount;
-  std::vector<player*> players;
-  std::vector<mountain*> mountains;
+  std::vector<player> players;
+  std::vector<mountain> mountains;
   int startpositions[2];
+
+  void generatePlayers(void);
+  void generateMountains(const size_t count);
 
 public:
   map(int size, int playercount);
@@ -34,8 +37,8 @@ public:
   int getSize(void) const;
   int getPlayercount(void) const;
   const int* getStartpositions(void) const;
-  const std::vector<player*> getPlayers(void) const;
-  const std::vector<mountain*> getMountains(void) const;
+  std::vector<player>& getPlayers(void) ;
+  std::vector<mountain>& getMountains(void) ;
 };
 
 
