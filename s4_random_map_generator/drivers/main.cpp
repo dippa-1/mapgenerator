@@ -12,32 +12,35 @@
 #include "map.h"
 #include "player.h"
 #include "functions.h"
+#include "mountain.h"
 #include "gdptools.h"
 
 
-#define MAP_SIZE 1024
+#define MAP_SIZE 704
 #define PLAYERCOUNT 8
-#define MAPCOUNT 1
+#define MAPCOUNT 5
+
+#if (MAPCOUNT<2)
+#define DRAW(m) GDPC* c = draw_map(m[0]);
+#else
+#define DRAW(m) GDPC* c = draw_maps_combined(m);
+#endif
 
 
 int main(void) {
   std::srand(std::time(0));
 
 
-  std::vector<map*> maps;
+  std::vector<map> maps;
   for (size_t i=0; i<MAPCOUNT; ++i){
-    map* m = new map(MAP_SIZE, PLAYERCOUNT);
+    map m(MAP_SIZE, PLAYERCOUNT);
     maps.push_back(m);
   }
 
-  GDPC* c = draw_maps_combined(maps);
+  DRAW(maps);
 
-  if (GDPC_destroy(c)) exit(1);
+  if (GDPC_destroy(c)) exit(0);
 
-  // Delete all maps
-  for (size_t i=0; i<MAPCOUNT; ++i){
-    delete maps.at(i);
-  }
   maps.clear();
 
   return 0;

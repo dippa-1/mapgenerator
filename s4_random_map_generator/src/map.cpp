@@ -24,74 +24,15 @@ map::map(int size, int playercount)
 
 
   // create Players
-  bool list_full = false;
-  size_t count = 0;
-  double factor = 0.0;
-  while (!list_full) {
-    ++count;
-    if(count > 1000) {
-      std::cout << "Could not generate map after " << count-1 << " attempts!" << std::endl;
-      exit(2);
-    }
-    players.clear();
-    for (int i = 0; i < playercount; ++i) {
-      factor = 1 + count*0.05;
-      const int* pos = new_random_startpos(this, factor);
-      if (pos == nullptr){
-        delete pos;
-        break;
-      }
-      player* p = new player(0, pos);
-      delete pos;
-      players.push_back(p);
-      if (i+1 == playercount) {
-        list_full = true;
-      }
-    }
-
-  }
-
+  generatePlayers();
 
   // Generate Mountains
+  generateMountains(10U);
 
-
-  count = 0;
-  list_full = false;
-  while (!list_full) {
-    ++count;
-    if(count > 1000) {
-      std::cout << "Could not generate map after " << count-1 << " attempts!" << std::endl;
-      exit(2);
-    }
-    mountains.clear();
-    for ( size_t i = 0; i<5; ++i){
-      const int* pos = new_random_mountainpos(this);
-      mountain* m = new mountain(10, pos);
-      mountains.push_back(m);
-      for ( size_t j=0; j<10; ++j){
-        const int* chain = mountain_chain(this, mountains.at(i*10 + j));
-        const int pos2[2] = {mountains.at(i*10 + j)->getPos()[0] + chain[0], mountains.at(i*10 + j)->getPos()[1] + chain[1]};
-        mountain* m = new mountain(10, pos2);
-        mountains.push_back(m);
-      }
-      delete pos;
-
-      if (i+1 == 5) {
-        list_full = true;
-      }
-    }
-  }
-
-  //std::cout << "Successfully generated map with " << count-1 << " fails!"
-  //    << " and with a factor of " << factor << std::endl;
 }
 
 
 map::~map(){
-  for (size_t i=0; i<players.size(); ++i){
-    delete players.at(i);
-    delete mountains.at(i);
-  }
   players.clear();
   mountains.clear();
 }
@@ -121,16 +62,60 @@ const int* map::getStartpositions(void) const {
 }
 
 
-const std::vector<player*> map::getPlayers(void) const {
+std::vector<player>& map::getPlayers(void)  {
   return players;
 }
 
 
-const std::vector<mountain*> map::getMountains(void) const{
+std::vector<mountain>& map::getMountains(void) {
   return mountains;
 }
 
 
+void map::generatePlayers(){
+
+  size_t tries = 0;
+  double factor = 0.0;
+  while (players.size() != (size_t)playercount) {
+    ++tries;
+    if(tries > 1000) {
+      D(std::cout << "Could not generate players after " << tries-1 << " tries!" << std::endl;)
+      exit(2);
+    }
+    players.clear();
+    for (int i = 0; i < playercount; ++i) {
+      factor = 1 + tries*0.05;
+      const int* pos = new_random_startpos(*this, factor);
+      if (pos == nullptr){
+        break;
+      }
+      player p(0, pos);
+      players.push_back(p);
+    }
+
+  }
+}
+
+
+void map::generateMountains(const size_t count) {
+  size_t tries = 0;
+  while (mountains.size() != count) {
+    ++tries;
+    if(tries > 3000) {
+      std::cout << "Could not generate " << count << " mountains after " << tries-1 << " tries!" << std::endl;
+      exit(2);
+    }
+    mountains.clear();
+    for ( size_t i = 0; i<count-tries+1; ++i){
+      const int* pos = new_random_mountainpos(*this);
+      if(pos == nullptr) break;
+      mountain m(10, pos);
+      mountains.push_back(m);
+    }
+  }
+
+  D(std::cout << "Generated " << mountains.size() << "/" << count << " mountains afer " << tries-1 << " tries." << std::endl;)
+}
 
 
 
