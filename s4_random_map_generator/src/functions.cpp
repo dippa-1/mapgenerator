@@ -13,6 +13,7 @@
 
 #define SQR2 1.41421356
 #define MAXIMUM_ERRORS 3000
+#define PI 3.14159
 
 /**###############################################################################
  * @brief calculates the distance between two points in a cosy
@@ -32,6 +33,13 @@ double distance(const int* pos1, const int* pos2){
  * @param vector
  */
 double distance(const double* pos){
+  if (pos == nullptr) exit(1);
+  double distance = sqrt( pow(pos[0], 2) + pow(pos[1], 2));
+
+  return distance;
+}
+
+double distance(const int* pos){
   if (pos == nullptr) exit(1);
   double distance = sqrt( pow(pos[0], 2) + pow(pos[1], 2));
 
@@ -118,6 +126,26 @@ int y_coord(int y){
  */
 int x_coord(int x, int y){
   return x + y_coord(y);
+}
+
+
+/**###############################################################################
+ * @brief transforms map-coordinates into display-coordinates
+ * @param array with coordinates
+ */
+void convert_to_display_coords(int* mappos){
+	mappos[1] = (int)(mappos[1]/SQR2);
+	mappos[0] += mappos[1];
+}
+
+
+/**###############################################################################
+ * @brief transforms display-coordinates into map-coordinates
+ * @param array with coordinates
+ */
+void convert_to_map_coords(int* displaypos){
+	displaypos[0] -= displaypos[1];
+	displaypos[1] *= SQR2;
 }
 
 
@@ -255,6 +283,7 @@ GDPC* draw_maps_combined(std::vector<map>& maps){
     for(size_t j=0; j < mountains.size(); ++j){
 
       const int* posp = mountains.at(j).getPos();
+      D(std::cout << "[DRAW] Mountainposition: " << posp[0] << "|" << posp[1] << std::endl;)
       int pos[2] = {posp[0], posp[1]};
 
       GDPC_circle(c, pos[0], ymax-pos[1], mountains[j].getSize(), 1);
@@ -375,8 +404,48 @@ const int* mountain_chain(map& map, mountain& mountain){
 }
 
 
+/**
+ * @brief Creates a mountain circle for bots with 3 coal, 2 iron, 1 stone, 1 gold
+ * @param position the circle should be around; should be at startposition of bot
+ * @param direction the circle-part will be in, a 2-dimensional vector with the length of the distance
+ */
+void create_botmountain(map& map, const int* pos, const int* direction){
 
+	int x1 = 1;
+	int y1 = 1;
+	int x2 = direction[0];
+	int y2 = direction[1];
 
+	double dot = x1*x2 + y1*y2;
+	double det = x1*y2 - y1*x2;
+	double angle;
+
+	if(direction[0] >= 0 && direction[1] >= 0){
+		angle = atan2(dot, det);
+	}
+	else if(direction[0] >= 0 && direction[1] < 0){
+		angle = atan2(det, dot);
+	}
+	else if(direction[0] < 0 && direction[1] < 0){
+		angle = atan2(dot, det) - PI/2.0;
+	}
+	else if(direction[0] < 0 && direction[1] >= 0){
+		angle = 2.0*PI + atan2(dot, det);
+	}
+
+	std::cout << "Phi is " << 180.0/PI * angle << std::endl;
+
+	//move 90degrees to the right
+	for(int i=-40; i<40; i+=10){
+		double anglenow = angle + i*PI/180.0;
+		std::cout << "Phinow: " << anglenow *180/PI << std::endl;
+		const int currentpos[2] = {(int)(pos[0]+30.0*sin(anglenow)), (int)(pos[1]+30.0*cos(anglenow))};
+
+		mountain m(5, currentpos);
+		map.addMountain(m);
+	}
+
+}
 
 
 

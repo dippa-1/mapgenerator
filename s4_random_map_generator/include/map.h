@@ -31,6 +31,8 @@ private:
 
 public:
   map(int size, int playercount);
+  map(int size, std::vector<player>& players);
+  map(int size, std::vector<player>& players, std::vector<mountain>& mountains);
   ~map();
   void printc(void) const; //prints to console
 
@@ -39,6 +41,8 @@ public:
   const int* getStartpositions(void) const;
   std::vector<player>& getPlayers(void) ;
   std::vector<mountain>& getMountains(void) ;
+
+  void addMountain(mountain m);
 };
 
 

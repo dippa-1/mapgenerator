@@ -13,7 +13,7 @@
 #include "gdpc.h"
 #include <vector>
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #define D(x) x
 #else
@@ -32,9 +32,10 @@ GDPC* draw_map(map& map);
 GDPC* draw_Players(map& map, GDPC* c);
 GDPC* draw_Mountains(map& map, GDPC* c);
 GDPC* draw_maps_combined(std::vector<map>& maps);
+
 const int* new_random_mountainpos(map& map);
 const int* mountain_chain(map& map, mountain& mountain);
-
+void create_botmountain(map& map, const int* pos, const int* direction);
 
 
 #endif /* INCLUDE_FUNCTIONS_H_ */

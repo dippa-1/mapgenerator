@@ -9,6 +9,9 @@
 #include "player.h"
 #include "functions.h"
 #include "mountain.h"
+#include <cmath>
+
+#define RANDOM_CHANCE 4
 
 map::map(int size, int playercount)
   : size(size), playercount(playercount){
@@ -27,9 +30,28 @@ map::map(int size, int playercount)
   generatePlayers();
 
   // Generate Mountains
-  generateMountains(10U);
+  generateMountains(5U);
+
+  // create botmountains
+  for(int i=0; i<playercount; ++i){
+	  if(players[i].getBot()){
+		  const int dir[2] = {size/2 - players[i].getPos()[0], size/2 - players[i].getPos()[1]};
+		  std::cout << "Direction of Botmountain: " << dir[0] << "|" << dir[1] << std::endl;
+		  create_botmountain(*this, players[i].getPos(), dir);
+	  }
+  }
 
 }
+
+
+map::map(int size, std::vector<player>& players): size(size), players(players), playercount(players.size()){
+	generateMountains(5U);
+}
+
+
+map::map(int size, std::vector<player>& players, std::vector<mountain>& mountains)
+	: size(size), players(players), mountains(mountains), playercount(players.size())
+{}
 
 
 map::~map(){
@@ -89,7 +111,7 @@ void map::generatePlayers(){
       if (pos == nullptr){
         break;
       }
-      player p(0, pos);
+      player p(i % 2, pos);
       players.push_back(p);
     }
 
@@ -114,9 +136,52 @@ void map::generateMountains(const size_t count) {
     }
   }
 
+  // now generate mountain-chains
+  /*const double minimum_player_distance = 1.5 * sqrt(size);
+  const int distance_to_water = 10;
+  for(size_t i = 0; i<count; ++i) {
+	  std::vector<mountain> m_chain;
+	  m_chain.push_back(mountains[i]);
+	  for(size_t j=0; (std::rand() % RANDOM_CHANCE) >= 1; ++j){
+		  const int* pos_origin = m_chain[j].getPos();
+		  const int* direction = mountain_chain(*this, m_chain[j]);
+		  const int pos[2] = {pos_origin[0] + direction[0], pos_origin[1] + direction[1]};
+		  if(distance(pos, players.at(i).getPos()) >= minimum_player_distance
+			//	  && x_coord(pos[0], pos[1])
+		  	  //	  < x_coord(size-distance_to_water-5, size-distance_to_water-5)
+				//  && x_coord(pos[0], pos[1])
+				//  > x_coord(distance_to_water+5, distance_to_water+5)
+				//  && y_coord(pos[1])
+		  	  	//  < y_coord(size-distance_to_water-5)
+				 // && y_coord(pos[1])
+		  	  	  //> y_coord(distance_to_water+5))
+
+			  && pos[0]
+	  	  	  < size-2*distance_to_water
+			  && pos[0]
+			  > 2*distance_to_water
+			  && pos[1]
+	  	  	  < size-2*distance_to_water
+			  && pos[1]
+	  	  	  > 2*distance_to_water)
+		  {
+			  mountain m(10, pos);
+			  m_chain.push_back(m);
+			  mountains.push_back(m);
+		  }
+		  else{
+			  break;
+		  }
+	  }
+  }*/
+
   D(std::cout << "Generated " << mountains.size() << "/" << count << " mountains afer " << tries-1 << " tries." << std::endl;)
 }
 
+
+void map::addMountain(mountain m){
+	mountains.push_back(m);
+}
 
 
 
