@@ -1,0 +1,241 @@
+; This tool tries to be a random map generator
+
+; Infos zum Projekt
+; Der Text in der Werkzeugleiste stimmt tatsächlich: bei größtem Maßstab sind es 6 Pixel pro Feld
+; Probleme
+; - Die Statusleiste zeigt nur die Kartengröße, aber nicht die jetzige Position mit der Maus, sodass das Script nicht wissen kann, wo es sich befindet
+; - Mit Rechtsklick durch die Map bewegen funktioniert nicht annähernd zuverlässig. Nach rechts ist es viel zu wenig, nach links viel zu viel -> keine Zuverlässige Positionsbestimmung!
+; ToDo
+; - Texterkennung für Statusleiste auf die derzeitige Position, damit sich der Computer orientieren kann
+; - generelle Zufallsmap kann noch nicht erstellt werden (unabhängig von der technischen Umsetzung in den Editor)
+
+
+; Return Codes:
+; 0 - no ERROR
+; 1 - select_tool ERROR
+; 2 - change_tool_setting ERROR
+; 3 - fill_ground_with_grass ERROR
+; 4 - create_new_map ERROR
+
+#include <MsgBoxConstants.au3>
+#include <Array.au3>
+#Include <File.au3>
+
+#RequireAdmin
+
+HotKeySet("n", create_new_map)
+HotKeySet("1", fill_ground_with_grass)
+HotKeySet("m", measure_map_length)
+HotKeySet("t", test)
+HotKeySet("{ESC}", _Exit)
+
+Local $title = "Siedler"
+Local $title_werkzeugauswahl = "Werkzeugauswahl"
+Local $title_werkzeugeinstellungen = "Werkzeugeinstellungen"
+
+
+While 1
+	Sleep(1000)
+WEnd
+
+
+Func select_tool($tool) ; working
+	switch $tool
+		Case "Gras"
+			If not ControlClick($title_werkzeugauswahl, "Werkzeugauswahl:", "[CLASS:SysTreeView32; INSTANCE:1]", "left", 1, 75, 54) Then Exit 1
+
+		Case "Feld"
+			If not ControlClick($title_werkzeugauswahl, "Werkzeugauswahl:", "[CLASS:SysTreeView32; INSTANCE:1]", "left", 1, 73, 175) Then Exit 1
+
+		Case Else
+			Exit 1
+	EndSwitch
+
+EndFunc
+
+
+Func change_tool_setting($tool_setting) ; working
+
+	switch $tool_setting
+		Case "Punkt"
+			If not ControlClick($title_werkzeugeinstellungen, "Punkt", "[CLASS:Button; INSTANCE:2]") Then Exit 2
+
+		Case "Duenn"
+			If not ControlClick($title_werkzeugeinstellungen, "Dünn", "[CLASS:Button; INSTANCE:3]") Then Exit 2
+
+		Case "Mittel"
+			If not ControlClick($title_werkzeugeinstellungen, "Mittel", "[CLASS:Button; INSTANCE:4]") Then Exit 2
+
+		Case "Breit"
+			If not ControlClick($title_werkzeugeinstellungen, "Breit", "[CLASS:Button; INSTANCE:5]") Then Exit 2
+
+		; Frei wählen 1 bis 25
+		Case 1 To 25
+			If not ControlClick($title_werkzeugeinstellungen, "&Frei wählen", "[CLASS:Button; INSTANCE:6]") Then Exit 2
+			Sleep(100)
+			If not ControlSend($title_werkzeugeinstellungen, "", "[CLASS:Edit; INSTANCE:1]", $tool_setting) Then Exit 2
+
+		Case "Sprenkeln"
+			If not ControlClick($title_werkzeugeinstellungen, "Sprenkeln", "[CLASS:Button; INSTANCE:7]") Then Exit 2
+
+		; Sprühen 1 bis 25
+		Case 101 To 125
+			If not ControlClick($title_werkzeugeinstellungen, "Aktiviere Sprühen", "[CLASS:Button; INSTANCE:9]") Then Exit 2
+			If not ControlSend($title_werkzeugeinstellungen, "", "[CLASS:Edit; INSTANCE:2]", $tool_setting - 100) Then Exit 2
+
+		; Partei 1 bis 8
+		Case 201 To 208
+			If not ControlClick($title_werkzeugeinstellungen, "Partei", "[CLASS:Button; INSTANCE:11]") Then Exit 2
+
+		Case Else
+			Exit 2
+
+	EndSwitch
+
+EndFunc
+
+
+Func create_new_map() ; working
+
+	ConsoleWrite(ControlClick($title, "", "[ID:1]", "", 1, 12, 12))
+	Sleep(100)
+	Opt("WinTitleMatchMode", 3)
+	If ControlGetText("Siedler IV Leveleditor", "Möchten Sie Ihre Änderungen speichern?", "[CLASS:Static; INSTANCE:2]") Then
+		If Not ControlClick("Siedler IV Leveleditor", "&No", "[CLASS:Button; INSTANCE:2]") Then Exit 4
+		Sleep(100)
+	EndIf
+	Opt("WinTitleMatchMode", 1)
+
+	; Mapgroesse ändern auf 512x512
+	If Not ControlClick("Neue Karte erstellen", "", "[CLASS:ListBox; INSTANCE:1]", "left", 1, 35, 61) Then Exit 4
+	Sleep(100)
+
+	ConsoleWrite(ControlClick("Neue Karte erstellen", "&OK", "[ID:1]"))
+	Sleep(100)
+
+	;Select tool
+	select_tool("Gras")
+
+EndFunc
+
+
+Func measure_map_length() ; not working properly
+
+	Local $x = 965
+	Local $x_delta = 30
+	Local $y = 542
+	Local $length = 0
+	MouseMove($x, $y)
+	MouseDown("right")
+	Sleep(50)
+	; Schnell nach links fahren, bis es schwarz wird
+	While PixelGetColor($x+40, $y-40) > 0
+		MouseMove($x-$x_delta, $y, 100)
+		$length += $x_delta
+		ToolTip(PixelGetColor($x+40, $y-40), 50, 50)
+		Sleep(250)
+	WEnd
+	; Langsam nach rechts fahren, solange es schwarz ist
+	While PixelGetColor($x+40, $y-40) == 0
+		MouseMove($x+1, $y, 100)
+		$length -= 1
+		ToolTip(PixelGetColor($x+40, $y-40), 50, 50)
+		Sleep(250)
+	WEnd
+	Sleep(100)
+	MouseUp("right")
+	Sleep(100)
+	MsgBox($MB_SYSTEMMODAL, "", "The  length is: " & $length)
+
+EndFunc
+
+
+Func test() ; Testing Playground, Hotkey "t"
+
+;~ 	MouseMove(965, 542, 0)
+
+;~ 	Sleep(100)
+;~ 	MouseDown("right")
+;~ 	Sleep(100)
+	For $i = 0 To 1475 Step 25
+		MouseClickDrag("right", 940, 542, 965, 542, 0)
+		Sleep(100)
+	Next
+
+;~ 	MouseUp("right")
+
+EndFunc
+
+
+Func fill_ground_with_grass() ; working with 256x256 map
+
+	select_tool("Gras")
+	Sleep(100)
+	change_tool_setting(25)
+	Sleep(100)
+
+	WinActivate($title)
+	WinWaitActive($title)
+
+	; Move and click from the middle to the top left corner
+	; Start 959, 470
+	; End 655, 202
+
+	$y = 800
+
+	Sleep(1000)
+
+	$step = 10
+
+	For $x = 150 To 1850 Step 100
+
+		If Mod(($x - 50) / 100, 2) == 1 Then
+
+			While PixelGetColor($x, $y) > 0
+				$y = $y + $step
+				MouseClick("left", $x, $y, 1, 0)
+			WEnd
+			$y = $y - $step
+
+		Else
+
+			If PixelGetColor($x, $y) = 0 Then $y = $y - 100 ; 100, weil die Schräge eine Winkelhalbierende ist und Step 100 ist
+
+			While PixelGetColor($x, $y) > 0
+				$y = $y - $step
+				MouseClick("left", $x, $y, 1, 0)
+			WEnd
+			$y = $y + $step
+
+		EndIf
+	Next
+
+
+;~ 	MouseClickDrag("left", $x_start, $y_start, $x, $y, 3)
+;~ 	MsgBox($MB_SYSTEMMODAL, "", "The  y coordinate is: " & $y)
+
+
+
+;~ 	For $i = 0 To 50
+;~ 		If Not ControlClick($title, "Siedler IV LeveleditorChildFrame", "[CLASS:Siedler IV LeveleditorChildFrame; INSTANCE:1]", "left", 1, $x, $y) Then Exit 3
+;~ 		$x = $x - $x_delta
+;~ 		$y = $y - $y_delta
+;~ 	Next
+
+EndFunc
+
+
+Func get_current_coordinates()
+
+	; make snapshot of the coordinates
+
+
+	; use tesseract to extract text from image
+	ShellExecuteWait("C:\Program Files (x86)\Tesseract-OCR\tesseract.exe", " """ & $img_filename & """ """ & $ocr_filename & """")
+
+EndFunc
+
+
+Func _Exit()
+	Exit 0
+EndFunc
